@@ -16,7 +16,7 @@
     &__header {
         background: $dark-blue-grey;
         height: 260px;
-        padding-top: 51px;
+        padding-top: 28px;
 
         .user-info {
             flex: 1;
@@ -51,7 +51,7 @@
 
     &__menu-item {
         color: $white;
-        height: 66px;
+        height: 55px;
         display: flex;
         align-items: center;
         cursor: pointer;
@@ -114,6 +114,33 @@
 
         .ic:not(:first-child) {
             margin-left: 22px;
+        }
+    }
+
+    @media only screen 
+    and (min-device-width : 768px) 
+    and (max-device-width : 1024px)
+    and (orientation : landscape) {
+        .logo-wrapper img {
+            width: 57px;
+            height: 50px;
+            object-fit: initial;
+        }
+
+        .user-info {
+            margin-top: 0;
+            
+            .logo-org {
+                display: none;
+            }
+
+            .name {
+                font-size: 2rem;
+            }
+
+            .email {
+                font-size: 1.3rem;
+            }
         }
     }
 }

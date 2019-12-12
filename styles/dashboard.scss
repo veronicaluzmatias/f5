@@ -1,8 +1,9 @@
 @import 'colors';
-@import 'variables'
-;
+@import 'variables';
 @import 'dashboard/header';
 @import 'dashboard/sidebar';
+@import "widgets/cards";
+@import "widgets/modals";
 
 .dashboard {
     display: flex;
@@ -12,7 +13,7 @@
     &-grid {
         flex: 1;
         display: grid;
-        grid-template-columns: 1fr 1fr 1.16fr;
+        grid-template-columns: 1fr 1fr 1fr;
         grid-template-rows: 1fr 1.5fr 2fr;
         grid-template-areas: 
         'vol bin chart'
@@ -23,10 +24,11 @@
         > * {
             background-color: $white;
             background-repeat: no-repeat;
-            background-position: 95% bottom;
-            background-size: auto 55px;
+            background-position: right bottom;
+            background-size: auto 65px;
+            background-origin: content-box;
             position: relative;
-            padding: 28px 20px 20px 20px;
+            padding: 26px 20px 18px 20px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -36,9 +38,16 @@
             grid-area: bin;
             background-image: url(/img/box.svg);
             color: rgba($dark-hot-pink, 0.75);
+            justify-content: flex-end;
         }
         &__chart {
             grid-area: chart;
+            padding: 0;
+
+            #dashChart {
+                display: flex;
+                justify-content: center;
+            }
         }
         &__map {
             grid-area: map;
@@ -54,23 +63,72 @@
             grid-area: sched;
             background-image: url(/img/appointment.svg);
             color: rgba($squash, 0.75);
+
+            .info {
+                font-size: 1.5rem;
+                font-weight: bold;
+
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                background-image: url(/img/ilustracao-coletas.png);
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: 50%;
+            }
         }
         &__volume {
             grid-area: vol;
             background-image: url(/img/truck.svg);
             color: rgba($blueberry, 0.75);
+            justify-content: flex-end;
+        }
+
+        .spacing {
+            width: 100%;
+            height: 20px;
         }
 
         .title {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 900;
-            line-height: 1.28;
+            line-height: 41px;
             color: $black;
         }
 
         .description {
-            font-size: 12px;
-            line-height: 1.25;
+            font-size: 14px;
+            line-height: 15px;
+        }
+
+        @media screen and (min-width: $xlg-width) {
+            .title {
+                font-size: 40px;
+            }
+
+            .description {
+                font-size: 18px;
+            }
+
+            .spacing {
+                height: 45px;
+            }
+        }
+
+        @media screen and (min-width: $xlg-width + 500px) {
+            .title {
+                font-size: 68px;
+            }
+
+            .description {
+                font-size: 28px;
+            }
+
+            .spacing {
+                height: 60px;
+            }
         }
     }
 
@@ -108,9 +166,11 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        
-        padding: 50px 73px;
         position: relative;
+        
+        box-sizing: border-box;
+        padding: 28px 73px;
+        max-height: 100vh;
 
         .modal-container {
             position: absolute;
@@ -118,7 +178,7 @@
             left: 0;
             background-color: rgba($black, 0.4);
             z-index: 1000;
-            width: inherit;
+            width: 100%;
             height: 100%;
             display: flex;
             justify-content: center;
@@ -126,18 +186,23 @@
         }
 
         .modal {
-            max-width: 851px;
+            max-width: 603px;
             
             border-radius: 5px;
             box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.16);
             background: $white;
             position: relative;
-            padding: 49px 75.5px 72px 73.5px;
+            padding: 50px 72.5px 50px 72.5px;
 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
+            text-align: center;
+
+            .btn {
+                height: 40px;
+            }
         }
 
         .modal .ic-close {
@@ -148,17 +213,20 @@
 
         .modal-title {
             font-size: 36px;
-            line-height: 1.19;
+            line-height: 2.19;
             font-weight: 900;
             color: $blueberry;
             text-align: center;
-            width: 75%;
-            max-width: 445px;
+            width: 93%;
+            max-width: 525px;
             margin: 0 auto;
         }
 
         .modal-disclaimer {
-            line-height: 27px;
+            font-size: 1.2rem;
+            line-height: 30px;
+            text-align: center;
+            padding-bottom: 34px;
         }
 
         .modal-actions {
@@ -168,7 +236,6 @@
     }
 
     &-title {
-        font-family: NexaSlab;
         font-size: 2rem;
         font-weight: 900;
         line-height: 1.81;
@@ -187,6 +254,7 @@
     background-position: center 30%;
 
     &__title {
+        margin-top: -10%;
         font-weight: 900;
         font-size: 32px;
     }
@@ -194,8 +262,8 @@
     &__disclaimer {
         margin: 30px 0;
         text-align: center;
-        font-size: 16px;
-        line-height: 19px;
+        font-size: 18px;
+        line-height: 24px;
 
         a {
             color: $dark-hot-pink;

@@ -1,16 +1,22 @@
 <link rel="stylesheet" href="/css/dashboard.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/css/autoComplete.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/js/autoComplete.min.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCDQXi8Ivilc0wysu24bcjh0t2qhAtz5ls"></script>
+<script src="/js/jq-mask-plugin.js"></script>
 
 <script type="text/javascript">
     __f5__.closeModal = function () {
-        let modal = document.querySelector('.modal-container');
+        let modal = $('.modal-container');
         if (modal) {
-            const closeBtn = modal.querySelector('.ic-close');
-            if (closeBtn) { closeBtn.removeEventListener('click', __f5__.modalCloseListener); }
+            const closeBtn = modal.find('.ic-close');
+            if (closeBtn) { closeBtn.unbind('click', __f5__.modalCloseListener); }
 
-            const cancelBtn = modal.querySelector('#cancel-btn');
-            if (cancelBtn) { cancelBtn.removeEventListener('click', __f5__.modalCloseListener); }
+            const cancelBtn = modal.find('#cancel-btn');
+            if (cancelBtn) { cancelBtn.unbind('click', __f5__.modalCloseListener); }
 
             modal.remove();
+        } else {
+            console.warn('Modal not found');
         }
     };
     __f5__.modalCloseListener = __f5__.closeModal;
@@ -34,16 +40,129 @@
     };
     __f5__.bins = {
         askDelete: function (id) {
-            $.get(`/bins/${id}`, function (data) {
-                __f5__.parseModalHTML(data);
+            $.get(`/app/bins/${id}`, function (data) {
+                __f5__.parseModalHTML(data, 'confirm');
+            });
+        },
+        configureForm: () => {
+            const addressSel = '#address';
+            const data = {};
+            new autoComplete({
+                data: {
+                    src: async () => {
+                        const query = document.querySelector(addressSel).value;
+                        const source = await fetch(`/app/bins/search/address?q=${query}`);
+                        return await source.json();
+                    },
+                    key: ["name"],
+                    cache: false
+                },
+                selector: addressSel,
+                threshold: 3,
+                debounce: 300,
+                searchEngine: "strict",
+                resultsList: {
+                    render: true,
+                    container: source => {
+                        const resultsListID = "places_List";
+                        return resultsListID;
+                    },
+                    destination: document.querySelector(addressSel),
+                    position: "afterend",
+                    element: "ul"
+                },
+                maxResults: 5,
+                highlight: true,
+                resultItem: {
+                    content: (data, source) => {
+                        document.querySelector("#address").classList.add('searched');
+                        const place = data.value;
+                        source.innerHTML = `
+                <span class="line-1 text-3">${place.name}</span>
+                <span class="line-2">${place.type} - ${place.address} Pontos disponíveis: ${place.number_points}</span>
+                `;
+                    },
+                    element: "li"
+                },
+                noResults: () => {
+                    const result = document.createElement("li");
+                    result.setAttribute("class", "no_result");
+                    result.setAttribute("tabindex", "1");
+                    result.innerHTML = "Endereço não encontrado";
+                    document.querySelector("#autoComplete_list").appendChild(result);
+                    document.querySelector("#address").classList.add('searched');
+                },
+                onSelection: feedback => {
+                    document.querySelector("#address").classList.remove('searched');
+                    document.querySelector(addressSel).value = feedback.selection.value.name;
+                    document.querySelector('.form-group.bin_size').classList.add('active');
+                    document.querySelector('.form-group.bin_size .badge').classList.add('badge--active');
+                    document.querySelector('#size-m').removeAttribute('disabled');
+                    document.querySelector('#size-g').removeAttribute('disabled');
+                    data.address = feedback.selection.value._id;
+
+                    const place = {
+                        lat: feedback.selection.value.latitude,
+                        lng: feedback.selection.value.longitude
+                    };
+                    var map = new google.maps.Map(
+                        document.querySelector('.map-wrapper'), {
+                        center: place,
+                        clickableIcons: false,
+                        gestureHandling: 'none',
+                        fullscreenControl: false,
+                        mapTypeControl: false,
+                        panControlOptions: false,
+                        rotateControl: false,
+                        streetViewControl: false,
+                        minZoom: 15,
+                        maxZoom: 17,
+                        zoom: 16,
+                    }
+                    );
+                    var marker = new google.maps.Marker({
+                        icon: '/img/F5-logo.png',
+                        position: place,
+                        map: map
+                    });
+                }
+            });
+
+            const enableSubmit = (e) => {
+                e.preventDefault();
+                let target = e.target;
+                if (target.tagName == 'IMG') {
+                    target = target.parentElement;
+                }
+                target.classList.add('active');
+                if (target.id === 'size-m') {
+                    document.querySelector('#size-g').classList.remove('active');
+                    data.size = 'm';
+                } else {
+                    document.querySelector('#size-m').classList.remove('active');
+                    data.size = 'g';
+                }
+                const saveButton = document.querySelector('#save-bin');
+                saveButton.removeAttribute('disabled');
+                saveButton.classList.add('btn--primary');
+                saveButton.classList.add('btn--inactive');
+            };
+            document.querySelector('#size-m').addEventListener('click', enableSubmit);
+            document.querySelector('#size-g').addEventListener('click', enableSubmit);
+            document.querySelector('#save-bin').addEventListener('click', () => {
+                const bin = `address=${data.address}&size=${data.size}`;
+                $.post('/app/bins/register', bin, (data) => {
+                    __f5__.parseModalHTML(data, 'registered-bin');
+                    __f5__.orders.listenCancel();
+                });
             });
         },
         delete: function (id) {
             $.ajax({
-                url: `/bins/${id}`,
+                url: `/app/bins/${id}`,
                 type: 'DELETE',
                 success: (data) => {
-                    f5.parseModalHTML(data, 'confirmed');
+                    __f5__.parseModalHTML(data, 'confirmed');
                     document.querySelector('.ic-close').addEventListener('click', () => {
                         const binRow = document.querySelector(`#bin-${id}`);
                         if (!binRow) { return; }
@@ -55,21 +174,143 @@
             });
         }
     },
-    __f5__.payment = {},
+    __f5__.payment = {
+        configureForm: () => {
+            $('#cvv').mask('000');
+            $('#validity').mask('00/0000');
+            $('#number').mask('0000 0000 0000 0000');
+
+            const data = {
+                name: '',
+                number: '',
+                validity: '',
+                cvv: ''
+            };
+            const valid = {
+                name: true,
+                number: true,
+                validity: true,
+                cvv: true
+            };
+            const checkForm = (e) => {
+                const elId = e.target.id;
+                data[elId] = e.target.value;
+                valid[elId] = e.target.validity.valid;
+                const saveButton = document.querySelector('#save-cc');
+                const isValid = valid.name && valid.number && valid.validity && valid.cvv;
+                if (isValid && saveButton.disabled) {
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('btn--primary');
+                    saveButton.classList.remove('btn--inactive');
+                } else if (!isValid && !saveButton.disabled) {
+                    saveButton.setAttribute('disabled', true);
+                    saveButton.classList.remove('btn--primary');
+                    saveButton.classList.add('btn--inactive');
+                }
+            };
+            document.querySelector('#name').addEventListener('keyup', checkForm);
+            document.querySelector('#number').addEventListener('keyup', checkForm);
+            document.querySelector('#validity').addEventListener('keyup', checkForm);
+            document.querySelector('#cvv').addEventListener('keyup', checkForm);
+            document.querySelector('#save-cc').addEventListener('click', () => {
+                const saveButton = document.querySelector('#save');
+
+                const cc = `name=${data.name}&number=${data.number}&validity=${data.validity}&cvv=${data.cvv}`;
+                $.post('/app/payment/credit-card', cc, (data) => {
+                    const modalContainer = document.querySelector('.dashboard__main .modal-container');
+                    if (modalContainer) {
+                        document.removeChild(modalContainer);
+                    }
+                    document.querySelector('.dashboard__main').innerHTML += data;
+                });
+            });
+
+            checkForm({ target: document.querySelector('#name') });
+            checkForm({ target: document.querySelector('#number') });
+            checkForm({ target: document.querySelector('#validity') });
+            checkForm({ target: document.querySelector('#cvv') });
+        }
+    },
+    __f5__.profile = {
+        configureForm: () => {
+            $('#cnpj').mask('00.000.000/0000-00');
+
+            const data = {
+                name: '',
+                address: '',
+                logo: document.getElementById('logo-preview').getAttribute('src'),
+                cnpj: ''
+            };
+            const valid = {
+                name: true,
+                address: true,
+                logo: true,
+                cnpj: true
+            };
+            const checkForm = (e) => {
+                const elId = e.target.id;
+                data[elId] = e.target.value;
+                valid[elId] = e.target.validity.valid;
+                const saveButton = document.querySelector('#edit-user');
+                const isValid = valid.name && valid.cnpj && valid.address && valid.logo;
+                if (isValid && saveButton.disabled) {
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('btn--primary');
+                    saveButton.classList.remove('btn--inactive');
+                } else if (!isValid && !saveButton.disabled) {
+                    saveButton.setAttribute('disabled', true);
+                    saveButton.classList.remove('btn--primary');
+                    saveButton.classList.add('btn--inactive');
+                }
+            };
+            document.querySelector('#name').addEventListener('keyup', checkForm);
+            document.querySelector('#address').addEventListener('keyup', checkForm);
+            document.querySelector('#cnpj').addEventListener('keyup', checkForm);
+            document.querySelector('#edit-user').addEventListener('click', () => {
+                const saveButton = document.querySelector('#save');
+
+                const orgProfile = `name=${data.name}&address=${data.address}&cnpj=${data.cnpj}&logo=${data.logo}`;
+                $.post('/app/users/organization', orgProfile, (data) => {
+                    const modalContainer = document.querySelector('.dashboard__main .modal-container');
+                    if (modalContainer) {
+                        document.removeChild(modalContainer);
+                    }
+                    document.querySelector('.dashboard__main').innerHTML += data;
+                });
+            });
+            document.querySelector('#logo-input').addEventListener('change', (event) => {
+                const input = event.target;
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        $('#logo-preview')
+                            .attr('src', data.logo = e.target.result);
+                    };
+
+                    reader.readAsDataURL(input.files[0]);
+                }
+            });
+
+            checkForm({ target: document.querySelector('#name') });
+            checkForm({ target: document.querySelector('#cnpj') });
+            checkForm({ target: document.querySelector('#address') });
+        }
+    },
     __f5__.gathering = {},
     __f5__.orders = {
         askDelete: function (id) {
-            $.get(`/dashboard/requests/${id}`, function (data) {
+            $.get(`/app/dashboard/requests/${id}`, function (data) {
                 __f5__.parseModalHTML(data);
             });
         },
         delete: function (id) {
-            const url = `/dashboard/requests/delete/${id}`;
+            const url = `/app/dashboard/requests/delete/${id}`;
             $.get(url, (data) => {
                 __f5__.parseModalHTML(data, 'delete-request');
                 document.querySelector('#delete-btn').addEventListener('click', () => {
                     $.ajax({
-                        url: `/dashboard/requests/${id}`,
+                        url: `/app/dashboard/requests/${id}`,
                         type: 'DELETE',
                         success: function (data) {
                             __f5__.parseModalHTML(data, 'deleted-request');
@@ -96,3 +337,5 @@
         <!-- <div class="dashboard-loader hide"></div> -->
     </div>    
 </div>
+
+<script type='text/javascript' src='https://widget.freshworks.com/widgets/47000003240.js' async defer></script>

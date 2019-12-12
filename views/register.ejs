@@ -4,20 +4,14 @@
 <section class="register lop">
   <aside class="lop__left-side">
     <div class="lop__header">
-      <img src="/img/F5-logo.svg">
+      <img src="/img/logo-register.svg">
     </div>
-    <img src="/img/register.png" srcset="/img/register@2x.png 2x,
-                   img/register@3x.png 3x">
-    <div class="lop__left-text text-0-slab">
-      <span>Venha fazer parte</span>
-      <span>desse movimento.</span>
-      <span>Da um F5!</span>
-    </div>
+    <img src="/img/register.png">
   </aside>
   <main class="lop__right-side">
     <div class="lop__header">
       <span class="lop__login-link text-4">
-        Já tem uma conta na F5? <a class="link--primary" href="/login">Entrar</a>
+        Já tem uma conta na F5? <a class="link--primary" href="/app/login">Entrar</a>
       </span>
     </div>
     <div class="lop__box step-1 hide">
@@ -25,15 +19,15 @@
         <h2 class="text-1 bold">Registre-se</h2>
         <form id="form-step-1">
           <div class="form-group">
-            <label class="text-2" for="name">Nome da empresa *</label>
+            <label class="text-4" for="name">Nome da empresa</label>
             <input type="text" id="name" name="name" class="form-control" placeholder="Digite o nome da sua empresa" required/>
           </div>
           <div class="form-group">
-            <label class="text-2" for="address">Endereço *</label>
+            <label class="text-4" for="address">Endereço</label>
             <input type="text" id="address" name="address" class="form-control" placeholder="Digite o endereço da empresa" required/>
           </div>
           <div class="form-group">
-            <label class="text-2" for="cnpj">CNPJ *</label>
+            <label class="text-4" for="cnpj">CNPJ</label>
             <input type="text" id="cnpj" name="cnpj" class="form-control" placeholder="Digite o CNPJ da empresa sem pontos" required/>
           </div>
           <div class="form-footer">
@@ -48,20 +42,20 @@
         <h2 class="text-1 bold">Registre-se</h2>
         <form id="form-step-2">
           <div class="form-group">
-            <label class="text-2" for="email">Email *</label>
+            <label class="text-4" for="email">Email</label>
             <input type="email" id="email" name="email" class="form-control" placeholder="Digite seu email" required/>
           </div>
           <div class="form-group">
-            <label class="text-2" for="password">Senha *</label>
+            <label class="text-4" for="password">Senha</label>
             <input minlength="6" type="password" id="password" name="password" class="form-control" placeholder="Digite sua senha" required/>
           </div>
           <div class="form-group">
-            <label class="text-2" for="confirm_password">Confirme sua senha *</label>
+            <label class="text-4" for="confirm_password">Confirme sua senha</label>
             <input minlength="6" type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirme a senha acima" required/>
             <div class="form-error"></div>
           </div>
           <div class="form-group">
-            <label class="text-4" style="line-height: initial;" for="accept"><input name="accept" id="accept" type="checkbox" required />Ao criar uma conta você concorda com os nossos <a class="link--primary" href="">Termos de Serviço</a> e <a class="link--primary" href=""></a>Política de Privacidade.</a></label>
+            <label class="text-5" style="line-height: inherit; font-weight: normal; margin-top: 10px" for="accept"><input name="accept" id="accept" type="checkbox" required />Ao criar uma conta você concorda com os nossos <a class="link--primary" href="">Termos de Serviço</a> e <a class="link--primary" href=""></a>Política de Privacidade.</a></label>
           </div>
           <div class="form-footer">
             <button id="submit" type="submit" class="btn-sm btn--primary">Registrar</button>
@@ -104,7 +98,13 @@
     if ($('#password.form-control').val() !== $('#confirm_password.form-control').val()) { return; }
 
     const data = $(this).serialize() + '&' + $(lopBox1Sel + ' form').serialize();
-    $.post('users/register', data);
+    $.post('users/register', data, function (_, textStatus) {
+      if (textStatus === 'success') {
+        location.href = '/app/dashboard';
+      } else {
+        console.warn('Register failed')
+      }
+    });
   });
 
   const password = $('#password.form-control');

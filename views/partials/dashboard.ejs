@@ -1,33 +1,135 @@
 <% if (org.payed) { %>
+<!-- <script  onload="setPinPointsOnMap" async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCDQXi8Ivilc0wysu24bcjh0t2qhAtz5ls"></script> -->
+
 <div class="dashboard-grid">
     <div class="dashboard-grid__volume count">
         <h4 class="title">800 kg</h4>
+        <div class="spacing"></div>
         <span class="description">Volume coletado nos últimos 30 dias</span>
     </div>
     <div class="dashboard-grid__bins count">
-        <h4 class="title">10</h4>
+        <h4 class="title"><%= activeBins %></h4>
+        <div class="spacing"></div>
         <span class="description">Bins cadastradas e operando</span>
     </div>
-    <div class="dashboard-grid__chart"></div>
+    <div class="dashboard-grid__chart">
+        <div id="dashChart"></div>
+    </div>
     <div class="dashboard-grid__map">
         <div class="map-wrapper"></div>
         <span class="description">Mapa de Bins</span>
     </div>
     <div class="dashboard-grid__schedule">
-        <div class="info"></div>
+        <div class="info">
+            <p>Em breve!</p>
+        </div>
         <span class="description">Coletas agendadas</span>
     </div>
 </div>
+<script>
+    $.get('/app/dashboard/data', data => {
+        function setPinPointsOnDashMap() {
+            const places = data.places;
+            var map = new google.maps.Map(
+                document.querySelector('.map-wrapper'), {
+                center: places[0],
+                clickableIcons: true,
+                fullscreenControl: true,
+                mapTypeControl: true,
+                panControlOptions: true,
+                rotateControl: true,
+                streetViewControl: true,
+                zoomControl: true,
+                minZoom: 10,
+                maxZoom: 14,
+                zoom: 12,
+            }
+            );
+            places.forEach(place => new google.maps.Marker({
+                icon: '/img/F5-logo.png',
+                position: place,
+                map: map
+            }));
+        }
+        
+        setPinPointsOnDashMap();
+
+        /* D3 CHART */
+        const dashChart = document.querySelector('#dashChart');
+        var width = dashChart.parentElement.offsetWidth - 25,
+            height = dashChart.parentElement.offsetHeight - 25,
+            margin = 50;
+        var radius = Math.min(width * 0.8, height * 0.8) / 2 - margin;
+        var arc =  d3.arc()
+            .innerRadius(height > 500 ? radius - 50 : 130)         // This is the size of the donut hole
+            .outerRadius(radius)
+        var svg = d3.select("#dashChart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height * 0.8 / 2 + ")");
+
+        // Create dummy data
+        var chartData = {
+            fullBins: data.gathering.fullBins,
+            emptyBins: data.gathering.emptyBins
+        }
+
+        // set the color scale
+        var color = d3.scaleOrdinal()
+            .domain(chartData)
+            .range(['#ef4941', '#70eb8d'])
+
+        // Compute the position of each group on the pie:
+        var pie = d3.pie()
+            .value(function (d) { return d.value; })
+        var data_ready = pie(d3.entries(chartData))
+
+        // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+        svg
+            .selectAll('.arc')
+            .data(data_ready)
+            .enter()
+            .append('path')
+            .attr('d', arc)
+            .attr('fill', function (d) { return (color(d.data.key)) })
+            .style("opacity", 0.7);
+        svg
+            .selectAll('.arc')
+            .data(data_ready)
+            .enter()
+            .append("text")
+            .attr("text-anchor", "middle")
+            .attr('font-size', height > 500 ? '3em' : '1.5em')
+            .attr('y', 20)
+            .text('Total de Bins');
+
+        var lg =  d3.select("#dashChart svg").append('g')
+            .attr('class', 'legend')
+            .attr("width", width * 2)
+            .attr("height", height * 0.4)
+            .attr('transform', `translate(${width/2},${height * 0.8})`)
+            .append('g')
+            .attr("width", width * 2)
+            .attr("height", height * 0.4)
+            .attr('transform', (d, i) => `translate(${i * -100},${height * 0})`);
+        lg.append("rect").attr('x', -width / 3).attr('y', 30).attr("width", 15).attr("height", 15).attr("r", 5).style("fill", "#70eb8d")
+        lg.append("text").attr('x', -width / 3 + 25).attr('y', 40).text("Bins coletadas").style("font-size", "16px").attr("alignment-baseline", "middle")
+        lg.append("rect").attr('x', +width / 15).attr('y', 30).attr("width", 15).attr("height", 15).attr("r", 5).style("fill", "#ef4941")
+        lg.append("text").attr('x', +width / 15 + 25).attr('y', 40).text("Bins para coletar").style("font-size", "16px").attr("alignment-baseline", "middle")
+    });
+</script>
 <% } else { %>
 <div class="empty-page empty-page--dashboard">
     <h2 class="empty-page__title">Bem-vindo à F5!</h2>
     <span class="empty-page__disclaimer">
         <span>Para concluir seu cadastro e começar a utilizar a plataforma, por favor</span><br>
         <span>adicione seus dados de pagamento na aba
-            <a href="#" data-route="/dashboard/profile" class="profile-link capitalize"  onClick="__f5__.router.navigate('/dashboard/profile')">Meu Perfil </a>
+            <a href="#" data-route="/dashboard/profile" class="profile-link"  onClick="__f5__.router.navigate('/dashboard/profile')">Meu Perfil </a>
             no menu lateral</span><br>
         <span>ou clicando no botão abaixo</span>
     </span>
-    <a href="#" data-route="/dashboard/profile" class="profile-link btn-md btn--primary capitalize" onClick="__f5__.router.navigate('/dashboard/profile')">Cadastrar cartão</a>
+    <a href="#" data-route="/dashboard/profile" class="profile-link btn-lg btn--primary" onClick="__f5__.router.navigate('/dashboard/profile')">Cadastrar cartão</a>
 </div>
 <% } %>

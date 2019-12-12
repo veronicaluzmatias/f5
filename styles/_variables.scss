@@ -9,7 +9,16 @@ $text-6-font-size: 0.6667rem; // 12px
 
 $md-width: 768px;
 $lg-width: 1023px;
-$xlg-width: 1339px;
+$xlg-width: 1439px;
 
 $header-height: 128px;
 $sidebar-width: 300px;
+
+$modal-bin-delete-height: 187px;
+$modal-bin-delete-width: 480px;
+$modal-bin-deleted-width: 600px;
+$modal-bin-deleted-height: 160px;
+$modal-order-delete-height: 276px - 49px;
+$modal-order-delete-width: 778px - 75.5px - 73.5px;
+$modal-order-deleted-width: 600px;
+$modal-order-deleted-height: 200px;

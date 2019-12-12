@@ -1,5 +1,4 @@
-@import "widgets/cards";
-@import "widgets/modals";
+@import "placeholders";
 @import "widgets/wizard-step";
 
 #confirm-delete-modal .modal {
@@ -15,6 +14,24 @@
     .modal .modal-title {
         width: initial;
         max-width: initial;
+    }
+}
+
+#info-modal {
+    @extend %modal-bin-inserted;
+
+    .modal {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .modal > *:not(.wizard-step):not(.ic) {
+        margin-left: 73.5px;
+        margin-right: 73.5px;
+    }
+
+    .wizard-step {
+        margin-left: 0;
     }
 }
 

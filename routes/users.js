@@ -7,8 +7,8 @@ import { Organization } from '../models/Organization';
 import { User } from '../models/User';
 
 // Register Handle
-router.post('/register', (req, res) => {
-    const { name, email, password, confirm_password, address, cnpj, tel, accept } = req.body;
+router.post('/register', (req, res, next) => {
+    const { name, email, password, confirm_password, address, cnpj, accept } = req.body;
     let errors = [];
 
     // Check required fields
@@ -36,8 +36,7 @@ router.post('/register', (req, res) => {
             name,
             email,
             address,
-            cnpj,
-            phone
+            cnpj
         });
     };
 
@@ -54,8 +53,11 @@ router.post('/register', (req, res) => {
             user.organization.save()
                 .then(() => user.save())
                 .then(() => {
-                    req.flash('success_msg', 'Você já está cadastrado e agora já pode fazer seu login');
-                    res.redirect('/login');
+                    passport.authenticate('local', {
+                        successRedirect: '/app/dashboard',
+                        failureRedirect: '/app/login',
+                        failureFlash: true
+                    })(req, res, next);
                 })
                 .catch(err => console.error(err));
         };
@@ -85,8 +87,7 @@ router.post('/register', (req, res) => {
                 organization = new Organization({
                     name,
                     address,
-                    cnpj,
-                    tel
+                    cnpj
                 });
 
                 User.findOne({ email }).then(thenUser);
@@ -101,20 +102,54 @@ router.post('/register', (req, res) => {
 // Local Handle
 router.post('/login', (req, res, next) => {
     passport.authenticate('local', {
-        successRedirect: '/dashboard',
-        failureRedirect: '/login',
+        successRedirect: '/app/dashboard',
+        failureRedirect: '/app/login',
         failureFlash: true
     })(req, res, next);
 
 });
 
-router.get('/login', (req, res) => res.redirect('../login'));
+router.get('/login', (req, res) => res.redirect('/app/login'));
 
 // Logout Handle
-router.post('/logout', (req, res) => {
+router.get('/logout', (req, res) => {
     req.logout();
     req.flash('success_msg', 'You have logged out');
-    res.redirect('/login');
+    res.status(200);
+    res.send('Logged out');
+});
+
+router.post('/organization', (req, res) => {
+    const { name, address, cnpj, logo } = req.body;
+
+    const updateOrgQuery = { $set: { } };
+    if (name) {
+        updateOrgQuery.$set.name = name;
+    }
+    if (address) {
+        updateOrgQuery.$set.address = address;
+    }
+    if (cnpj) {
+        updateOrgQuery.$set.cnpj = cnpj;
+    }
+    if (logo) {
+        // updateOrgQuery.$set.logo = new Buffer(logo.split(",")[1], "base64");
+        // updateOrgQuery.$set.logo = new Buffer(logo, 'binary').toString('base64');
+    }
+
+    Organization.findByIdAndUpdate(req.user.organization, updateOrgQuery, (err, org) => {
+        if (err) {
+            res.status(500);
+            res.send({ err, org });
+
+            return;
+        }
+
+        res.render('modals/profile_updated', {
+            layout: 'layouts/modal',
+            modalId: 'profile_updated'
+        });
+    });
 });
 
 export default router;

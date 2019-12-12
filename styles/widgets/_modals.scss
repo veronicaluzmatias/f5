@@ -1,99 +1,26 @@
-$modal-bin-delete-height: 276px - 49px;
-$modal-bin-delete-width: 778px - 75.5px - 73.5px;
-$modal-bin-deleted-width: 600px;
-$modal-bin-deleted-height: 160px;
-$modal-order-delete-height: 276px - 49px;
-$modal-order-delete-width: 778px - 75.5px - 73.5px;
-$modal-order-deleted-width: 600px;
-$modal-order-deleted-height: 200px;
+@import "../colors";
+@import "../placeholders";
 
-%modal-bin-delete {
-    .modal {
-        height: $modal-bin-delete-height;
-        width: $modal-bin-delete-width;
-
-        &-actions {
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            margin-top: 30px;
-        }
-    
-        &-title {
-            max-width: 600px;
-        }
-    }
-    
-}
-
-%modal-bin-deleted {
-    .ic {
-        top: 30px;
-    }
-
-    .modal {
-        padding: 0;
-        height: $modal-bin-deleted-height;
-        width: $modal-bin-deleted-width;
-        justify-content: center;
-    }
-}
-
-%modal-bin-inserted {
-    .modal {
-        min-height: 481px;
-        max-height: 681px;
-    }
-
-    .label {
-        color: $blueberry;
-    }
-
-    .modal-disclaimer {
-        width: 681px;
-        text-align: center;
-    }
-
+.modal-container {
     .row--bottom-border {
         border-bottom: 2px solid $snow;
     }
 
-    .row .value {
-        margin-left: 50px;
+    .label {
+        color: $blueberry;
+        font-weight: bold;
     }
 
-    #order-cancel {
-        line-height: 60px;
-        text-align: center;
-    }
-}
-
-%modal-order-delete {
-    .ic {
-        display: none;
+    .value {
+        color: $black;
     }
 
-    .modal {
-        height: $modal-order-delete-height;
-        width: $modal-order-delete-width;
-    }
-    
-    .modal-actions {
-        width: 100%;
-        display: flex;
-        justify-content: space-around;
-    }
-}
-
-%modal-order-deleted {
-    .ic {
-        top: 30px;
+    .btn {
+        height: 60px;
     }
 
-    .modal {
-        padding: 0;
-        height: $modal-order-deleted-height;
-        width: $modal-order-deleted-width;
-        justify-content: center;
+    .wizard-step {
+        height: 120px;
+        align-items: flex-end;
     }
 }

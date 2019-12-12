@@ -4,7 +4,7 @@
             <img src="/img/F5-logo.svg">
         </div>
         <div class="user-info">
-            <img class="logo-org" src="/img/logo-org.png" alt="Logo da Empresa">
+            <img class="logo-org" src="<%= org.logo || '/img/logo-org-' + (user.email.startsWith('sucata') ? 'sucata.jpeg' : 'f5.png') %>" alt="Logo da Empresa">
             <span class="name text-5"><%= org.name %></span>
             <span class="email text-6"><%= user.email %></span>
         </div>
@@ -42,19 +42,22 @@
     </footer>
 </aside>
 <script>
-    document.querySelectorAll('.sidebar__menu-item:not(.disabled) a').forEach(a => {
-        a.addEventListener('click', function (e) {
-            __f5__.router.navigate(e.target.dataset.route);
-            e.target.parentElement.classList.add('active');
+    setTimeout(() => {
+        document.querySelectorAll('.sidebar__menu-item:not(.disabled) a').forEach(a => {
+            a.addEventListener('click', function (e) {
+                console.log(e.target.dataset.route)
+                __f5__.router.navigate(e.target.dataset.route);
+                e.target.parentElement.classList.add('active');
+            });
         });
-    });
-    const activeMenuItem = '#<%= page%>-link';
-    const li = document.querySelector(activeMenuItem);
-    if (li) {
-        li.classList.add('active');
-    }
-    document.querySelector('#logout-link').addEventListener('click', function (e) {
-        e.preventDefault();
-        $.post('/users/logout', () => location.href = '/');
+        const activeMenuItem = '#<%= page%>-link';
+        const li = document.querySelector(activeMenuItem);
+        if (li) {
+            li.classList.add('active');
+        }
+        document.querySelector('#logout-link a').addEventListener('click', function (e) {
+            e.preventDefault();
+            $.get('/app/users/logout', () => location.href = '/app');
+        });
     });
 </script>
